@@ -1,0 +1,62 @@
+#!/usr/bin/env zsh
+
+# This is just a little script that can be downloaded from the internet to install 'project
+# validation' tool. It validates `html` files using the W3CValidation API. It also greps
+# strings on files, using `rg`, to search for mandatory `html` elements or `css` properties
+# to be used on students' web projects.
+#
+# It runs in zsh shell. It uses `jq`, `rg` and `curl` to validate web projects
+
+autoload -U colors && colors
+
+# HTML markup validator
+function validate_html_files {
+
+    printf "\n------------------------------------------"
+    printf "\n%sValidating .html files%s\n" $fg[yellow] $reset_color
+    printf "\n------------------------------------------"
+
+    for file in *.html; do
+        printf '\n-------------------------------\n'
+        echo "Validating file: $fg[yellow]$file$reset_color"
+
+        echo "Results for $file:"
+
+        # More info : https://validator.w3.org/docs/api.html
+        curl -H 'Content-Type: text/html; charset=utf-8'\
+            --data-binary @"$file" 'https://validator.w3.org/nu/?out=json'\
+            | jq '.messages[] | {type, lastLine, message, extract}'
+
+        printf '\n-------------------------------\n'
+    done
+}
+
+function validate_project_specs {
+
+    if [ $# -eq 0 ]; then
+        echo "no arguments provided"
+        exit 1
+    fi
+
+    if [ ! -f "$@" ]; then
+        echo "File $1 does not exist."
+        exit 1
+    fi
+
+    printf "\n------------------------------------------"
+    printf "\n%sChecking if project meets specifications%s\n" $fg[yellow] $reset_color
+    printf "--------------------------------------------\n"
+
+    for line in $(cat "$@"); do
+        if ! rg "$line\b" --glob '!*.md'; then
+            error_msg="The following element was not found from project specifications: "
+            printf "\n%s%s>%s\n" "$fg[red]" "$error_msg" "$line" "$reset_color"
+        else
+            success_msg="Found the following element from project specification: "
+            printf "\n%s%s%s>%s" "$success_msg" "$fg[green]" "$line" "$reset_color"
+        fi
+    done
+}
+
+validate_project_specs "$@"
+validate_html_files
