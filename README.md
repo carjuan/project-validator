@@ -31,8 +31,6 @@ It is a very simple tool that:
 -   Checks students `root folder` to check if provided folder meets projects specifications
 -   Validates `HTML markup` and `CSS`
 
-<!-- You don't have to answer all the questions - just the ones relevant to your project. -->
-
 ## Technologies Used
 
 -   Shell Script **_(ZSH)_**
